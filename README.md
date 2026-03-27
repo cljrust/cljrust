@@ -12,7 +12,7 @@ A parasitic language compiler that brings Clojure's syntax to Rust. Write in Clo
 ## Quick Start
 
 ```bash
-# Build the compiler
+# Build the compiler => ./target/release/cljrust Add to $PATH
 cargo build --release
 
 # Try the interactive REPL
