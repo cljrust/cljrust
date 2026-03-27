@@ -75,12 +75,12 @@
     (println! "Sum 1..10 = {}" result))
 
   ; HashMap
-  (let [m (HashMap::from [("a" 1) ("b" 2) ("c" 3)])]
+  (let [m {"a" 1 "b" 2 "c" 3}]
     (println! "Map: {:?}" m))
 
-  ; 闭包
+  ; 闭包与迭代器
   (let [nums (vec! [1 2 3 4 5])
-        doubled (.collect (.map (.iter &nums) (fn [x : &i32] -> i32 (* @x 2))))]
+        doubled : Vec < i32 > (.collect (.map (.iter &nums) (fn [x : &i32] -> i32 (* @x 2))))]
     (println! "Doubled: {:?}" doubled))
 
   ; 方法链

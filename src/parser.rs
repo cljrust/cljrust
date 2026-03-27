@@ -411,7 +411,7 @@ impl Parser {
     fn parse_impl(&mut self) -> Result<Impl, String> {
         self.expect(&Token::LParen)?;
         self.expect_symbol("defimpl")?;
-        let type_name = self.expect_any_symbol()?;
+        let first_name = self.expect_any_symbol()?;
 
         let generics = if self.peek() == Some(&Token::Symbol("<".to_string())) {
             self.parse_generics()?
@@ -419,36 +419,16 @@ impl Parser {
             Vec::new()
         };
 
-        // optional trait name with `for` keyword pattern: (defimpl Display for MyType ...)
-        // or just: (defimpl MyType ...) or (defimpl TraitName MyType ...)
-        let trait_name = if self.peek_symbol() == Some("for") {
-            // pattern: (defimpl Type for Trait ...)  — wait, it's the other way
-            // Actually let's use: (defimpl TraitName for TypeName ...)
-            let tn = type_name.clone();
+        // Two patterns:
+        //   (defimpl TypeName ...)                → impl TypeName { ... }
+        //   (defimpl TraitName for TypeName ...)   → impl TraitName for TypeName { ... }
+        let (type_name, trait_name) = if self.peek_symbol() == Some("for") {
             self.advance()?; // skip "for"
-            let _actual_type = self.expect_any_symbol()?;
-            Some(clj_to_rust_ident(&tn))
+            let actual_type = self.expect_any_symbol()?;
+            (clj_to_rust_ident(&actual_type), Some(clj_to_rust_ident(&first_name)))
         } else {
-            None
+            (clj_to_rust_ident(&first_name), None)
         };
-
-        let actual_type = if trait_name.is_some() {
-            // We already consumed the type above, let me restructure
-            // (defimpl Trait for Type methods...)
-            // After parsing "for", we consumed the type name
-            // Need to get it from the parse above
-            // Let me re-examine: type_name=Trait, then "for", then actual type
-            // The advance above skipped "for", and _actual_type is the real type
-            // But we dropped it. Let me fix the logic.
-            // Actually, _actual_type was captured above. Let me restructure.
-            clj_to_rust_ident("") // placeholder, fix below
-        } else {
-            clj_to_rust_ident(&type_name)
-        };
-
-        // Let me redo this properly
-        // Rewind approach won't work easily. Let's fix the logic:
-        let _ = actual_type; // suppress warning
 
         let mut methods = Vec::new();
         while self.peek() != Some(&Token::RParen) {
@@ -456,13 +436,8 @@ impl Parser {
         }
         self.expect(&Token::RParen)?;
 
-        // Re-derive type name properly:
-        // If trait_name is Some, the `type_name` was actually the trait name
-        // and we need the second symbol which was parsed as _actual_type
-        // Since we can't easily recover it, let me restructure parse_impl
-
         Ok(Impl {
-            type_name: clj_to_rust_ident(&type_name),
+            type_name,
             generics,
             trait_name,
             methods,

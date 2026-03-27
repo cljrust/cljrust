@@ -5,7 +5,6 @@
 
 (use std::collections::HashMap)
 (use std::collections::HashSet)
-(use std::io)
 
 ; ── 使用 Rust 泛型结构体 ─────────────────────
 (defstruct Stack #[Debug]

@@ -189,7 +189,16 @@ impl Lexer {
             }
             '"' => self.read_string(),
             '\\' => self.read_char_literal(),
-            ':' => self.read_keyword(),
+            ':' => {
+                // : followed by symbol char → keyword (:name)
+                // : followed by space/delim → standalone colon (type separator)
+                if self.peek_ahead(1).map_or(false, |c| is_symbol_start(c)) {
+                    self.read_keyword()
+                } else {
+                    self.advance();
+                    Ok(Token::Symbol(":".to_string()))
+                }
+            }
             '-' => {
                 if self.peek_ahead(1) == Some('>') {
                     self.advance();
@@ -213,7 +222,25 @@ impl Lexer {
             }
             c if c.is_ascii_digit() => self.read_number(),
             c if is_symbol_start(c) => self.read_symbol(),
-            '+' | '*' | '/' | '%' | '<' | '>' | '!' | '^' | '|' => self.read_symbol(),
+            '<' => {
+                self.advance();
+                if self.peek() == Some('=') {
+                    self.advance();
+                    Ok(Token::Symbol("<=".to_string()))
+                } else {
+                    Ok(Token::Symbol("<".to_string()))
+                }
+            }
+            '>' => {
+                self.advance();
+                if self.peek() == Some('=') {
+                    self.advance();
+                    Ok(Token::Symbol(">=".to_string()))
+                } else {
+                    Ok(Token::Symbol(">".to_string()))
+                }
+            }
+            '+' | '*' | '/' | '%' | '!' | '^' | '|' => self.read_symbol(),
             _ => Err(format!(
                 "Unexpected character '{}' at line {} col {}",
                 ch, self.line, self.col
@@ -382,7 +409,11 @@ fn is_symbol_start(c: char) -> bool {
 }
 
 fn is_symbol_char(c: char) -> bool {
-    c.is_alphanumeric() || matches!(c, '_' | '-' | '!' | '?' | '+' | '*' | '/' | '<' | '>' | '=' | '%' | '&' | '^' | '|' | '~')
+    c.is_alphanumeric() || matches!(c, '_' | '-' | '!' | '?' | '+' | '*' | '/' | '=' | '%' | '^' | '|' | '~')
+}
+
+fn is_operator_start(c: char) -> bool {
+    matches!(c, '<' | '>' | '&')
 }
 
 #[cfg(test)]

@@ -631,15 +631,7 @@ impl CodeGen {
 
             // ── Macro call ──────────────────────────────────
             Expr::MacroCall { name, args } => {
-                self.write(name);
-                self.write("(");
-                for (i, a) in args.iter().enumerate() {
-                    if i > 0 {
-                        self.write(", ");
-                    }
-                    self.gen_expr(a);
-                }
-                self.write(")");
+                self.gen_macro_call(name, args);
             }
 
             // ── Method call ─────────────────────────────────
@@ -790,6 +782,34 @@ impl CodeGen {
                 self.write("]");
             }
         }
+    }
+
+    // ── Macro call generation ─────────────────────────────────────
+
+    fn gen_macro_call(&mut self, name: &str, args: &[Expr]) {
+        self.write(name);
+        // Special case: (vec! [1 2 3]) → vec![1, 2, 3]
+        if name == "vec!" && args.len() == 1 {
+            if let Expr::Vec(elems) = &args[0] {
+                self.write("[");
+                for (i, e) in elems.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.gen_expr(e);
+                }
+                self.write("]");
+                return;
+            }
+        }
+        self.write("(");
+        for (i, a) in args.iter().enumerate() {
+            if i > 0 {
+                self.write(", ");
+            }
+            self.gen_expr(a);
+        }
+        self.write(")");
     }
 
     // ── Loop body with recur transformation ─────────────────────

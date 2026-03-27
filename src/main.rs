@@ -8,8 +8,8 @@ use lexer::Lexer;
 use parser::Parser;
 use std::env;
 use std::fs;
-use std::io::{self, Read as IoRead};
-use std::path::{Path, PathBuf};
+use std::io::{self, Read};
+use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
@@ -273,13 +273,7 @@ edition = "2021"
     fs::write(src_dir.join("main.clj"), main_clj).expect("Failed to write main.clj");
 
     // Write build script hint
-    let build_hint = format!(
-        r#"#!/bin/sh
-# Build script: compile .clj to .rs then use cargo
-cljpro compile src/main.clj -o src/main.rs
-cargo build
-"#
-    );
+    let build_hint = "#!/bin/sh\n# Build script: compile .clj to .rs then use cargo\ncljpro compile src/main.clj -o src/main.rs\ncargo build\n";
     fs::write(project_dir.join("build.sh"), build_hint).expect("Failed to write build.sh");
 
     println!("Created new cljpro project: {}/", name);

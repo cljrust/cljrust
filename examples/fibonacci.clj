@@ -1,0 +1,11 @@
+; Fibonacci — 展示 loop/recur 尾递归
+
+(defn fib [n : u64] -> u64
+  (loop [i 0 a 0 b 1]
+    (if (= i n)
+      a
+      (recur (+ i 1) b (+ a b)))))
+
+(defn main []
+  (for [i (.. 0 20)]
+    (println! "fib({}) = {}" i (fib (as i u64)))))
