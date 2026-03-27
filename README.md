@@ -1,8 +1,8 @@
-# cljrust
+# CljRust - Clojure to Rust compiler
 
 A parasitic language compiler that brings Clojure's syntax to Rust. Write in Clojure S-expressions, compile to native Rust code, and seamlessly use the entire Rust ecosystem.
 
-## Why cljrust?
+## Why CljRust?
 
 - **Clojure's elegance**: S-expressions, immutability-first, prefix notation, minimal syntax
 - **Rust's power**: Zero-cost abstractions, memory safety, fearless concurrency
