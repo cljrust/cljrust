@@ -1,29 +1,29 @@
 ; ============================================
-; cljpro 完整功能展示
-; Clojure 语法，编译到 Rust，使用 Rust 全生态
+; cljrust full feature showcase
+; Clojure syntax, compiles to Rust, full Rust ecosystem
 ; ============================================
 
 (use std::collections::HashMap)
 
-; ── 常量与静态变量 ─────────────────────────────
+; ── Constants ────────────────────────────────
 (const MAX-SIZE -> i32 100)
 
-; ── 结构体 (自动 derive) ──────────────────────
+; ── Struct (auto derive) ─────────────────────
 (defstruct Point #[Debug Clone]
   [pub x : f64
    pub y : f64])
 
-; ── 枚举 ─────────────────────────────────────
+; ── Enum ─────────────────────────────────────
 (defenum Shape #[Debug]
   (Circle f64)
   (Rect f64 f64)
   Unit)
 
-; ── Trait 定义 ────────────────────────────────
+; ── Trait ─────────────────────────────────────
 (deftrait Describable
   (defn describe [&self] -> String))
 
-; ── impl 块 ──────────────────────────────────
+; ── impl block ───────────────────────────────
 (defimpl Point
   (defn distance [&self] -> f64
     (.sqrt (+ (* self.x self.x) (* self.y self.y))))
@@ -31,39 +31,39 @@
   (defn translate [&self dx : f64 dy : f64] -> Point
     (new Point :x (+ self.x dx) :y (+ self.y dy))))
 
-; ── Trait 实现 ────────────────────────────────
+; ── Trait impl ───────────────────────────────
 (defimpl Describable for Point
   (defn describe [&self] -> String
     (format! "Point({}, {})" self.x self.y)))
 
-; ── 主函数 ────────────────────────────────────
+; ── main ─────────────────────────────────────
 (defn main []
-  ; let 绑定
+  ; let bindings
   (let [p (new Point :x 3.0 :y 4.0)
         dist (.distance &p)]
     (println! "Point: {:?}" p)
     (println! "Distance: {}" dist)
     (println! "Description: {}" (.describe &p)))
 
-  ; 可变绑定
+  ; mutable bindings
   (let-mut [v (vec! [1 2 3])]
     (.push &mut v 4)
     (.push &mut v 5)
     (println! "Vector: {:?}" v))
 
-  ; 模式匹配
+  ; pattern matching
   (let [shape (Shape::Circle 5.0)]
     (match shape
       (Shape::Circle r) (println! "Circle with radius {}" r)
       (Shape::Rect w h) (println! "Rect {}x{}" w h)
       Shape::Unit (println! "Unit shape")))
 
-  ; if 表达式
+  ; if expression
   (let [x 42
         msg (if (> x 40) "big" "small")]
     (println! "{} is {}" x msg))
 
-  ; for 循环
+  ; for loop
   (for [i (.. 0 5)]
     (println! "i = {}" i))
 
@@ -78,17 +78,17 @@
   (let [m {"a" 1 "b" 2 "c" 3}]
     (println! "Map: {:?}" m))
 
-  ; 闭包与迭代器
+  ; closures & iterators
   (let [nums (vec! [1 2 3 4 5])
         doubled : Vec < i32 > (.collect (.map (.iter &nums) (fn [x : &i32] -> i32 (* @x 2))))]
     (println! "Doubled: {:?}" doubled))
 
-  ; 方法链
+  ; method chaining
   (let [s (String::from "hello world")]
     (println! "Upper: {}" (.to_uppercase &s))
     (println! "Contains 'world': {}" (.contains &s "world")))
 
-  ; 类型转换
+  ; type casting
   (let [x (as 42 f64)]
     (println! "42 as f64 = {}" x))
 

@@ -1,4 +1,4 @@
-; Fibonacci — 展示 loop/recur 尾递归
+; Fibonacci — loop/recur tail recursion
 
 (defn fib [n : u64] -> u64
   (loop [i 0 a 0 b 1]

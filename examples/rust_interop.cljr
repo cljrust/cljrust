@@ -1,12 +1,12 @@
 ; ============================================
-; cljpro 示例: Rust 生态无缝互操作
-; 展示如何直接使用 Rust 标准库和类型系统
+; cljrust example: Seamless Rust ecosystem interop
+; Direct access to Rust stdlib and type system
 ; ============================================
 
 (use std::collections::HashMap)
 (use std::collections::HashSet)
 
-; ── 使用 Rust 泛型结构体 ─────────────────────
+; ── Generic struct ───────────────────────────
 (defstruct Stack #[Debug]
   [pub items : Vec < i32 >])
 
@@ -23,19 +23,19 @@
   (defn is-empty [&self] -> bool
     (.is_empty &self.items)))
 
-; ── Result 和错误处理 ─────────────────────────
+; ── Result & error handling ──────────────────
 (defn parse-number [s : &str] -> Result < i32 String >
   (match (.parse s)
     (Ok n) (Ok n)
     (Err e) (Err (.to_string &e))))
 
-; ── Option 处理 ──────────────────────────────
+; ── Option handling ──────────────────────────
 (defn safe-divide [a : f64 b : f64] -> Option < f64 >
   (if (= b 0.0)
     None
     (Some (/ a b))))
 
-; ── 迭代器和函数式操作 ───────────────────────
+; ── Iterators & functional ops ───────────────
 (defn sum-of-squares [nums : &Vec < i32 >] -> i32
   (.sum
     (.map
@@ -43,7 +43,7 @@
       (fn [x : &i32] -> i32 (* @x @x)))))
 
 (defn main []
-  ; Stack 使用
+  ; Stack usage
   (let-mut [stack (Stack::new)]
     (.push &mut stack 10)
     (.push &mut stack 20)
@@ -52,7 +52,7 @@
     (println! "Pop: {:?}" (.pop &mut stack))
     (println! "Stack after pop: {:?}" stack))
 
-  ; Result 处理
+  ; Result handling
   (match (parse-number "42")
     (Ok n) (println! "Parsed: {}" n)
     (Err e) (println! "Error: {}" e))
@@ -61,7 +61,7 @@
     (Ok n) (println! "Parsed: {}" n)
     (Err e) (println! "Error: {}" e))
 
-  ; Option 处理
+  ; Option handling
   (match (safe-divide 10.0 3.0)
     (Some result) (println! "10 / 3 = {}" result)
     None (println! "Division by zero!"))
@@ -70,7 +70,7 @@
     (Some result) (println! "10 / 0 = {}" result)
     None (println! "Division by zero!"))
 
-  ; 函数式编程
+  ; Functional programming
   (let [nums (vec! [1 2 3 4 5])]
     (println! "Sum of squares: {}" (sum-of-squares &nums)))
 
@@ -78,10 +78,10 @@
   (let-mut [set (HashSet::new)]
     (.insert &mut set "hello")
     (.insert &mut set "world")
-    (.insert &mut set "hello")  ; 重复的会被忽略
+    (.insert &mut set "hello")  ; duplicate ignored
     (println! "Set size: {}" (.len &set)))
 
-  ; String 操作
+  ; String operations
   (let-mut [s (String::from "Hello")]
     (.push_str &mut s " World")
     (println! "String: {}" s)

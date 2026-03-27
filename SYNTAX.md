@@ -1,124 +1,124 @@
-# cljpro 语法参考
+# cljrust Syntax Reference
 
-Clojure 语法 → Rust 编译器。用 Clojure 的表达力，享受 Rust 的性能和生态。
+Clojure syntax → Rust compiler. The expressiveness of Clojure with the performance and ecosystem of Rust.
 
-## 基本类型
+## Primitive Types
 
 ```clojure
-42          ; i64 整数
-3.14        ; f64 浮点
-"hello"     ; 字符串
-\a          ; 字符
-true false  ; 布尔
-nil         ; () 单元类型
-:keyword    ; 编译为 "keyword" 字符串
+42          ; i64 integer
+3.14        ; f64 float
+"hello"     ; string
+\a          ; char
+true false  ; bool
+nil         ; () unit type
+:keyword    ; compiles to "keyword" string
 ```
 
-## 变量绑定
+## Variable Bindings
 
 ```clojure
-; let 绑定 (不可变)
+; let binding (immutable)
 (let [x 10
-      y : i32 20]    ; 可选类型标注
+      y : i32 20]    ; optional type annotation
   (+ x y))
 
-; let-mut 绑定 (可变)
+; let-mut binding (mutable)
 (let-mut [count 0]
   (set! count 10))
 
-; 单个可变绑定
+; single mutable binding inside let
 (let [mut x 0]
   (set! x 42))
 
-; 顶层常量
+; top-level constant
 (const MAX -> i32 100)
 
-; 顶层定义
-(def NAME -> &str "cljpro")
+; top-level static
+(def NAME -> &str "cljrust")
 ```
 
-## 函数
+## Functions
 
 ```clojure
-; 公开函数
+; public function
 (defn add [a : i32 b : i32] -> i32
   (+ a b))
 
-; 私有函数
+; private function
 (defn- helper [x : i32] -> i32
   (* x 2))
 
-; 异步函数
+; async function
 (defn-async fetch-data [url : &str] -> Result < String Error >
   (? (do-fetch url)))
 
-; 闭包/匿名函数
+; closure / anonymous function
 (fn [x : i32 y : i32] -> i32 (+ x y))
-(fn [x] (* x x))  ; 类型推断
+(fn [x] (* x x))  ; type inference
 ```
 
-## 控制流
+## Control Flow
 
 ```clojure
-; if 表达式 (有返回值)
+; if expression (returns a value)
 (if (> x 0)
   "positive"
   "non-positive")
 
-; do 块
+; do block
 (do
   (println! "step 1")
   (println! "step 2")
-  42)  ; 最后一个表达式是返回值
+  42)  ; last expression is return value
 
-; match 模式匹配
+; match pattern matching
 (match value
   1 "one"
   2 "two"
   _ "other")
 
-; match 枚举
+; match enum
 (match option
   (Some x) (println! "Got {}" x)
   None (println! "Nothing"))
 
-; for 循环
+; for loop
 (for [i (.. 0 10)]
   (println! "{}" i))
 
-; while 循环
+; while loop
 (while (> n 0)
   (set! n (- n 1)))
 
-; loop/recur (尾递归优化)
+; loop/recur (tail recursion optimization)
 (loop [n 10 acc 0]
   (if (= n 0)
     acc
     (recur (- n 1) (+ acc n))))
 ```
 
-## 运算符
+## Operators
 
 ```clojure
-; 算术 (支持多参数)
+; arithmetic (variadic)
 (+ 1 2 3)        ; → (1 + 2) + 3
 (- 10 3)         ; → 10 - 3
 (* 2 3 4)        ; → (2 * 3) * 4
 (/ 10 2)         ; → 10 / 2
 (% 10 3)         ; → 10 % 3
 
-; 比较
+; comparison
 (= a b)          ; → a == b
 (!= a b)         ; → a != b
 (< a b) (> a b)  ; → a < b, a > b
 (<= a b) (>= a b)
 
-; 逻辑
+; logical
 (and a b)        ; → a && b
 (or a b)         ; → a || b
 (not x)          ; → !x
 
-; 位运算
+; bitwise
 (bit-and a b)    ; → a & b
 (bit-or a b)     ; → a | b
 (bit-xor a b)    ; → a ^ b
@@ -126,7 +126,7 @@ nil         ; () 单元类型
 (shr a b)        ; → a >> b
 ```
 
-## 集合
+## Collections
 
 ```clojure
 ; Vec
@@ -136,70 +136,70 @@ nil         ; () 单元类型
 {"key" 1 "other" 2}      ; → HashMap::from([...])
 {:a 1 :b 2}              ; → HashMap::from([("a", 1), ("b", 2)])
 
-; 元组
+; Tuple
 (tuple 1 "hello" true)   ; → (1, "hello", true)
 ```
 
-## Rust 互操作
+## Rust Interop
 
 ```clojure
-; 方法调用: (.method object args...)
+; method call: (.method object args...)
 (.push &mut v 42)        ; → v.push(42)
 (.len &s)                ; → s.len()
 (.to_uppercase &s)       ; → s.to_uppercase()
 
-; 静态方法: (Type::method args...)
+; static method: (Type::method args...)
 (String::from "hello")   ; → String::from("hello")
 (Vec::new)               ; → Vec::new()
 
-; 宏调用: (name! args...)
+; macro invocation: (name! args...)
 (println! "Hello {}" name)  ; → println!("Hello {}", name)
 (vec! [1 2 3])              ; → vec![1, 2, 3]
 (format! "{:?}" x)          ; → format!("{:?}", x)
 
-; use 导入
+; use imports
 (use std::collections::HashMap)
 (use std::io::{self Read Write})
 
-; 引用
+; references
 &x                        ; → &x
 &mut x                    ; → &mut x
-@x                        ; → *x (解引用)
+@x                        ; → *x (deref)
 
-; 类型转换
+; type cast
 (as 42 f64)              ; → (42 as f64)
 
-; ? 错误传播
+; ? error propagation
 (? (some-fallible-call))  ; → some_fallible_call()?
-(try! (some-call))        ; 同上
+(try! (some-call))        ; same
 
 ; .await
 (await (fetch url))       ; → fetch(url).await
 
-; 范围
+; range
 (.. 0 10)                 ; → 0..10
 (..= 0 10)               ; → 0..=10
 
-; 索引
+; index
 (get vec 0)               ; → vec[0]
 
-; 原始 Rust 代码逃逸
-~"unsafe { *ptr }"        ; 直接插入 Rust 代码
+; raw Rust escape hatch
+~"unsafe { *ptr }"        ; inserts raw Rust code
 ```
 
-## 结构体
+## Structs
 
 ```clojure
-; 定义 (带 derive)
+; definition (with derive)
 (defstruct Point #[Debug Clone PartialEq]
   [pub x : f64
    pub y : f64])
 
-; 创建实例
+; instantiation
 (new Point :x 3.0 :y 4.0)   ; → Point { x: 3.0, y: 4.0 }
 ```
 
-## 枚举
+## Enums
 
 ```clojure
 (defenum Color #[Debug]
@@ -208,20 +208,20 @@ nil         ; () 单元类型
   Blue
   (Custom u8 u8 u8))
 
-; 使用
+; usage
 Color::Red
 (Color::Custom 255 128 0)
 ```
 
-## Trait
+## Traits
 
 ```clojure
-; 定义 trait
+; define trait
 (deftrait Drawable
   (defn draw [&self])
   (defn area [&self] -> f64))
 
-; 实现 trait
+; implement trait
 (defimpl Drawable for Circle
   (defn draw [&self]
     (println! "Drawing circle"))
@@ -229,7 +229,7 @@ Color::Red
     (* 3.14159 self.radius self.radius)))
 ```
 
-## Impl 块
+## Impl Blocks
 
 ```clojure
 (defimpl Point
@@ -240,7 +240,7 @@ Color::Red
     (.sqrt (+ (* self.x self.x) (* self.y self.y)))))
 ```
 
-## 完整示例
+## Full Example
 
 ```clojure
 (use std::collections::HashMap)
@@ -269,9 +269,9 @@ Color::Red
       None (println! "not found"))))
 ```
 
-## 命名约定
+## Naming Conventions
 
-cljpro 自动将 Clojure 的 kebab-case 转为 Rust 的 snake_case:
+cljrust automatically converts Clojure's kebab-case to Rust's snake_case:
 
 ```
 my-function  →  my_function

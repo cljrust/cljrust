@@ -23,29 +23,28 @@ fn main() {
     match args[1].as_str() {
         "compile" | "c" => {
             if args.len() < 3 {
-                eprintln!("Usage: cljpro compile <file.clj> [--emit rust|binary] [-o output]");
+                eprintln!("Usage: cljrust compile <file.cljr> [--emit rust|binary] [-o output]");
                 std::process::exit(1);
             }
             cmd_compile(&args[2..]);
         }
         "run" | "r" => {
             if args.len() < 3 {
-                eprintln!("Usage: cljpro run <file.clj>");
+                eprintln!("Usage: cljrust run <file.cljr>");
                 std::process::exit(1);
             }
             cmd_run(&args[2..]);
         }
         "new" => {
             if args.len() < 3 {
-                eprintln!("Usage: cljpro new <project-name>");
+                eprintln!("Usage: cljrust new <project-name>");
                 std::process::exit(1);
             }
             cmd_new(&args[2]);
         }
         "emit" | "e" => {
-            // Just print the generated Rust code
             if args.len() < 3 {
-                eprintln!("Usage: cljpro emit <file.clj>");
+                eprintln!("Usage: cljrust emit <file.cljr>");
                 std::process::exit(1);
             }
             cmd_emit(&args[2]);
@@ -57,10 +56,9 @@ fn main() {
             print_usage();
         }
         "--version" | "-v" => {
-            println!("cljpro 0.1.0 — Clojure syntax → Rust compiler");
+            println!("cljrust 0.1.0 — Clojure syntax → Rust compiler");
         }
-        file if file.ends_with(".clj") => {
-            // Shorthand: cljpro file.clj → compile and run
+        file if file.ends_with(".cljr") => {
             cmd_run(&args[1..]);
         }
         other => {
@@ -73,27 +71,27 @@ fn main() {
 
 fn print_usage() {
     println!(
-        r#"cljpro 0.1.0 — Clojure syntax that compiles to Rust
+        r#"cljrust 0.1.0 — Clojure syntax that compiles to Rust
 
 USAGE:
-    cljpro <command> [options]
+    cljrust <command> [options]
 
 COMMANDS:
-    new <name>          Create a new cljpro project (Cargo project)
-    compile <file.clj>  Compile .clj to Rust source or binary
-      --emit rust       Output generated Rust code (default)
-      --emit binary     Compile to binary via rustc
-      -o <output>       Output file path
-    emit <file.clj>     Print generated Rust code to stdout
-    run <file.clj>      Compile and run immediately
-    repl                Interactive REPL (emit Rust for each expression)
-    help                Show this help
+    new <name>           Create a new cljrust project (Cargo project)
+    compile <file.cljr>  Compile .cljr to Rust source or binary
+      --emit rust        Output generated Rust code (default)
+      --emit binary      Compile to binary via rustc
+      -o <output>        Output file path
+    emit <file.cljr>     Print generated Rust code to stdout
+    run <file.cljr>      Compile and run immediately
+    repl                 Interactive REPL (emit Rust for each expression)
+    help                 Show this help
 
 EXAMPLES:
-    cljpro new my-app
-    cljpro emit hello.clj
-    cljpro run hello.clj
-    cljpro compile hello.clj --emit binary -o hello"#
+    cljrust new my-app
+    cljrust emit hello.cljr
+    cljrust run hello.cljr
+    cljrust compile hello.cljr --emit binary -o hello"#
     );
 }
 
@@ -160,9 +158,9 @@ fn cmd_compile(args: &[String]) {
             let rs_path = output
                 .as_deref()
                 .map(|o| format!("{}.rs", o))
-                .unwrap_or_else(|| file.replace(".clj", ".rs"));
+                .unwrap_or_else(|| file.replace(".cljr", ".rs"));
             let bin_path = output
-                .unwrap_or_else(|| file.replace(".clj", ""));
+                .unwrap_or_else(|| file.replace(".cljr", ""));
             fs::write(&rs_path, &rust_code).expect("Failed to write .rs file");
             let status = Command::new("rustc")
                 .args(&[&rs_path, "-o", &bin_path])
@@ -172,12 +170,11 @@ fn cmd_compile(args: &[String]) {
                 eprintln!("rustc compilation failed");
                 std::process::exit(1);
             }
-            // Clean up intermediate .rs
             let _ = fs::remove_file(&rs_path);
             println!("Compiled to: {}", bin_path);
         }
         _ => {
-            let out_path = output.unwrap_or_else(|| file.replace(".clj", ".rs"));
+            let out_path = output.unwrap_or_else(|| file.replace(".cljr", ".rs"));
             fs::write(&out_path, &rust_code).expect("Failed to write output");
             println!("Generated: {}", out_path);
         }
@@ -195,10 +192,9 @@ fn cmd_run(args: &[String]) {
         }
     };
 
-    // Write to temp file and compile+run
     let tmp_dir = env::temp_dir();
-    let rs_path = tmp_dir.join("__cljpro_tmp.rs");
-    let bin_path = tmp_dir.join("__cljpro_tmp");
+    let rs_path = tmp_dir.join("__cljrust_tmp.rs");
+    let bin_path = tmp_dir.join("__cljrust_tmp");
 
     fs::write(&rs_path, &rust_code).expect("Failed to write temp .rs file");
 
@@ -215,7 +211,6 @@ fn cmd_run(args: &[String]) {
 
     if !compile_status.success() {
         eprintln!("--- Generated Rust code ---");
-        // Print with line numbers for debugging
         for (i, line) in rust_code.lines().enumerate() {
             eprintln!("{:4} | {}", i + 1, line);
         }
@@ -227,7 +222,6 @@ fn cmd_run(args: &[String]) {
 
     let _ = fs::remove_file(&rs_path);
 
-    // Run the binary, passing remaining args
     let run_args: Vec<&str> = args.iter().skip(1).map(|s| s.as_str()).collect();
     let status = Command::new(bin_path.to_str().unwrap())
         .args(&run_args)
@@ -246,11 +240,9 @@ fn cmd_new(name: &str) {
         std::process::exit(1);
     }
 
-    // Create Cargo project structure
     let src_dir = project_dir.join("src");
     fs::create_dir_all(&src_dir).expect("Failed to create project directories");
 
-    // Write Cargo.toml
     let cargo_toml = format!(
         r#"[package]
 name = "{}"
@@ -263,39 +255,37 @@ edition = "2021"
     );
     fs::write(project_dir.join("Cargo.toml"), cargo_toml).expect("Failed to write Cargo.toml");
 
-    // Write main.clj
-    let main_clj = r#"; Welcome to cljpro!
+    let main_cljr = r#"; Welcome to cljrust!
 ; Clojure syntax → Rust compiler
 
 (defn main []
-  (println! "Hello from cljpro!"))
+  (println! "Hello from cljrust!"))
 "#;
-    fs::write(src_dir.join("main.clj"), main_clj).expect("Failed to write main.clj");
+    fs::write(src_dir.join("main.cljr"), main_cljr).expect("Failed to write main.cljr");
 
-    // Write build script hint
-    let build_hint = "#!/bin/sh\n# Build script: compile .clj to .rs then use cargo\ncljpro compile src/main.clj -o src/main.rs\ncargo build\n";
+    let build_hint = "#!/bin/sh\n# Build script: compile .cljr to .rs then use cargo\ncljrust compile src/main.cljr -o src/main.rs\ncargo build\n";
     fs::write(project_dir.join("build.sh"), build_hint).expect("Failed to write build.sh");
 
-    println!("Created new cljpro project: {}/", name);
-    println!("  src/main.clj  — your source code");
+    println!("Created new cljrust project: {}/", name);
+    println!("  src/main.cljr — your source code");
     println!("  Cargo.toml    — Rust project config (add dependencies here)");
     println!();
     println!("Quick start:");
     println!("  cd {}", name);
-    println!("  cljpro emit src/main.clj        # see generated Rust");
-    println!("  cljpro run src/main.clj          # compile & run");
-    println!("  cljpro compile src/main.clj -o src/main.rs  # then: cargo build");
+    println!("  cljrust emit src/main.cljr        # see generated Rust");
+    println!("  cljrust run src/main.cljr          # compile & run");
+    println!("  cljrust compile src/main.cljr -o src/main.rs  # then: cargo build");
 }
 
 fn cmd_repl() {
-    println!("cljpro REPL — type Clojure expressions, see Rust output");
+    println!("cljrust REPL — type Clojure expressions, see Rust output");
     println!("Type :quit to exit\n");
 
     let stdin = io::stdin();
     let mut input = String::new();
 
     loop {
-        eprint!("clj> ");
+        eprint!("cljr> ");
         input.clear();
         if stdin.read_line(&mut input).is_err() || input.trim() == ":quit" {
             break;

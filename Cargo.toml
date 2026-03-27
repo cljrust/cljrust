@@ -1,9 +1,9 @@
 [package]
-name = "cljpro"
+name = "cljrust"
 version = "0.1.0"
 edition = "2021"
 description = "Clojure-syntax language that compiles to Rust — seamless Rust ecosystem interop"
 
 [[bin]]
-name = "cljpro"
+name = "cljrust"
 path = "src/main.rs"
