@@ -15,6 +15,9 @@ A parasitic language compiler that brings Clojure's syntax to Rust. Write in Clo
 # Build the compiler
 cargo build --release
 
+# Try the interactive REPL
+cljrust repl
+
 # See generated Rust code
 cljrust emit examples/hello.cljr
 
@@ -196,6 +199,63 @@ get-value    →  get_value
 is-valid?    →  is_valid?
 ```
 
+## Interactive REPL
+
+The REPL compiles and executes each expression in real time — perfect for demos, learning, and quick experiments.
+
+```
+$ cljrust repl
+
+cljrust REPL v0.1.0
+Clojure syntax → Rust | Type expressions to evaluate
+
+cljr> (+ 1 2 3)
+  => 6
+
+cljr> (defstruct Point #[Debug Clone]
+  ...   [pub x : f64
+  ...    pub y : f64])
+  => defined: Point
+
+cljr> (defimpl Point
+  ...   (defn distance [&self] -> f64
+  ...     (.sqrt (+ (* self.x self.x) (* self.y self.y)))))
+  => defined: Point
+
+cljr> (let [p (new Point :x 3.0 :y 4.0)]
+  ...   (.distance &p))
+  => 5.0
+
+cljr> (defn factorial [n : u64] -> u64
+  ...   (loop [i n acc 1]
+  ...     (if (= i 0) acc (recur (- i 1) (* acc i)))))
+  => defined: factorial
+
+cljr> (factorial 20)
+  => 2432902008176640000
+```
+
+### REPL Features
+
+- **Stateful**: definitions (defn, defstruct, defenum, deftrait, defimpl) accumulate across inputs
+- **Multi-line**: keep typing until parentheses are balanced — auto-detects continuation
+- **Compile & execute**: expressions are compiled to Rust and run natively — not interpreted
+- **Result display**: expression results are printed via `Debug` formatting
+- **Pre-imported**: `HashMap` and `HashSet` available out of the box
+
+### REPL Commands
+
+| Command | Description |
+|---------|-------------|
+| `:help` | Show help and examples |
+| `:rust` | Toggle showing generated Rust code |
+| `:defs` | Show all accumulated definitions |
+| `:clear` | Clear all accumulated state |
+| `:history` | Show input history |
+| `:load <file>` | Load and evaluate a `.cljr` file |
+| `:last-rs` | Show the full Rust code from last evaluation |
+| `:quit` | Exit the REPL |
+
 ## CLI Commands
 
 ```
@@ -206,7 +266,7 @@ cljrust compile <file.cljr>  Compile to .rs or binary
   --emit rust                  Output Rust source (default)
   --emit binary                Compile to binary via rustc
   -o <output>                  Output file path
-cljrust repl                  Interactive REPL
+cljrust repl                  Interactive REPL (compile & execute)
 ```
 
 ## Using Rust Crates
@@ -251,6 +311,7 @@ cljrust/
     lexer.rs         # Tokenizer
     parser.rs        # S-expr → typed AST
     codegen.rs       # AST → Rust source code
+    repl.rs          # Interactive REPL (compile & execute)
   examples/
     hello.cljr       # Hello World
     fibonacci.cljr   # loop/recur tail recursion

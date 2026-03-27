@@ -2,6 +2,7 @@ mod ast;
 mod codegen;
 mod lexer;
 mod parser;
+mod repl;
 
 use codegen::CodeGen;
 use lexer::Lexer;
@@ -50,7 +51,7 @@ fn main() {
             cmd_emit(&args[2]);
         }
         "repl" => {
-            cmd_repl();
+            repl::run();
         }
         "--help" | "-h" | "help" => {
             print_usage();
@@ -84,7 +85,7 @@ COMMANDS:
       -o <output>        Output file path
     emit <file.cljr>     Print generated Rust code to stdout
     run <file.cljr>      Compile and run immediately
-    repl                 Interactive REPL (emit Rust for each expression)
+    repl                 Interactive REPL (compile & execute expressions)
     help                 Show this help
 
 EXAMPLES:
@@ -275,35 +276,6 @@ edition = "2021"
     println!("  cljrust emit src/main.cljr        # see generated Rust");
     println!("  cljrust run src/main.cljr          # compile & run");
     println!("  cljrust compile src/main.cljr -o src/main.rs  # then: cargo build");
-}
-
-fn cmd_repl() {
-    println!("cljrust REPL — type Clojure expressions, see Rust output");
-    println!("Type :quit to exit\n");
-
-    let stdin = io::stdin();
-    let mut input = String::new();
-
-    loop {
-        eprint!("cljr> ");
-        input.clear();
-        if stdin.read_line(&mut input).is_err() || input.trim() == ":quit" {
-            break;
-        }
-        let trimmed = input.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
-
-        match compile_source(trimmed) {
-            Ok(rust_code) => {
-                println!("=> {}", rust_code.trim());
-            }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-            }
-        }
-    }
 }
 
 fn read_source(file: &str) -> String {
